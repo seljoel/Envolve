@@ -1,16 +1,9 @@
-import Link from "next/link";
+import ImageCarousel from "@/components/ImageCarousel";
 
-export default function AboutPage() {
+export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center gap-6">
-      <h1 className="text-4xl font-bold">About Page</h1>
-
-      <Link
-        href="/"
-        className="text-blue-600 underline hover:text-blue-800"
-      >
-        Back to Home
-      </Link>
-    </main>
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black">
+      <ImageCarousel />
+    </div>
   );
 }
