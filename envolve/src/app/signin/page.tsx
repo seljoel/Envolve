@@ -1,15 +1,17 @@
 "use client";
 import { useState } from "react";
-import AuthInput from "@/components/AuthInput"
+import { useRouter } from "next/navigation";
+import AuthInput from "@/components/AuthInput";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const router = useRouter();
 
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
-    // Replace with real API
-    alert(`Signed in with:\nEmail: ${email}\nPassword: ${password}`);
+    localStorage.setItem("session", JSON.stringify({ email }));
+    router.replace("/");
   };
 
   return (
@@ -26,6 +28,15 @@ export default function SignIn() {
             Sign In
           </button>
         </form>
+        <p className="text-center text-sm mt-4">
+          Don’t have an account?{" "}
+          <span
+            onClick={() => router.push("/signup")}
+            className="text-blue-600 hover:underline cursor-pointer"
+          >
+            Sign Up
+          </span>
+        </p>
       </div>
     </div>
   );
