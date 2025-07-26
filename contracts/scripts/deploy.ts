@@ -13,9 +13,9 @@ async function main() {
   console.log("Deploying EnvolveNFT...");
   
   const nft = await EnvolveNFT.deploy(
-    "ipfs://Qm.../stage0.json", // Replace with actual IPFS URIs
-    "ipfs://Qm.../stage1.json",
-    "ipfs://Qm.../stage2.json"
+    "ipfs://QmYvxEW9ucfwdfMoegq2xeBZRgLgFEBUFmKGoDM5goAEzk/stage0.json", // Replace with actual IPFS URIs
+    "ipfs://QmanKKUpaA7ouDW4UvdpV56s1zQhdBPJYWY5deg7rfF9mU/stage1.json",
+    "ipfs://QmfF5WpuHjkEPqXSRijCv5A84UMLVX4Uz9thPTyoZt3oU8/stage2.json"
   );
 
   // Wait for deployment confirmation
