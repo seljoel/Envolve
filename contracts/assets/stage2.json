@@ -1,0 +1,39 @@
+{
+  "name": "Envolve - Stage 2: Restoration",
+  "description": "The fully restored environment, achieved through community effort. This represents the successful completion of all ecological milestones.",
+  "image": "ipfs://QmQEP5PzT3rtpWZsS972KEaN5bH7xzKbFojP1eXyuv77Yg/stage2.jpg",
+  "attributes": [
+    {
+      "trait_type": "Stage",
+      "value": "2"
+    },
+    {
+      "trait_type": "Condition",
+      "value": "Restored"
+    },
+    {
+      "trait_type": "Actions Completed",
+      "value": "50",
+      "display_type": "number"
+    },
+    {
+      "trait_type": "Restoration Progress",
+      "value": "100%",
+      "display_type": "boost_percentage"
+    },
+    {
+      "trait_type": "Biodiversity",
+      "value": "High"
+    },
+    {
+      "trait_type": "Carbon Sequestration",
+      "value": "Active",
+      "display_type": "boost_percentage"
+    }
+  ],
+  "background_color": "2E7D32",
+  "achievement": {
+    "title": "Ecosystem Champion",
+    "description": "Awarded for completing all restoration phases"
+  }
+}

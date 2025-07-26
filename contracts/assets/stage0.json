@@ -1,0 +1,28 @@
+{
+  "name": "Envolve - Stage 0: Pollution",
+  "description": "The environment in its initial degraded state, awaiting restoration through collective action. This NFT evolves as ecological milestones are achieved.",
+  "image": "ipfs://QmceTahmt8nx424J5oxKGSsbceVNUCqHRDhiUBx6eDXuD4/stage0.jpg",
+  "external_url": "https://yourproject.com/envolve",
+  "attributes": [
+    {
+      "trait_type": "Stage",
+      "value": "0"
+    },
+    {
+      "trait_type": "Condition",
+      "value": "Polluted"
+    },
+    {
+      "trait_type": "Actions Required",
+      "value": "50",
+      "display_type": "number"
+    },
+    {
+      "trait_type": "Restoration Progress",
+      "value": "0%",
+      "display_type": "boost_percentage"
+    }
+  ],
+  "animation_url": "ipfs://[ANIMATION_CID]/stage0.mp4",
+  "background_color": "5E2D00"
+}

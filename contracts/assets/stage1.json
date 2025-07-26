@@ -1,0 +1,30 @@
+{
+  "name": "Envolve - Stage 1: Recovery",
+  "description": "The environment shows first signs of recovery after successful community actions. More work needed to reach full restoration.",
+  "image": "ipfs://QmafiYrUVBtsadEQew69AcoFsu5H4cqzHq6rwaE4jd3Eue/stage1.jpg",
+  "attributes": [
+    {
+      "trait_type": "Stage",
+      "value": "1"
+    },
+    {
+      "trait_type": "Condition",
+      "value": "Recovering"
+    },
+    {
+      "trait_type": "Actions Completed",
+      "value": "25",
+      "display_type": "number"
+    },
+    {
+      "trait_type": "Restoration Progress",
+      "value": "50%",
+      "display_type": "boost_percentage"
+    },
+    {
+      "trait_type": "Biodiversity",
+      "value": "Low"
+    }
+  ],
+  "background_color": "7CB342"
+}

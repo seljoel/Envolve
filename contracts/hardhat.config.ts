@@ -10,6 +10,14 @@ const config: HardhatUserConfig = {
       accounts: [process.env.DEPLOYER_PRIVATE_KEY!]
     }
   },
+  etherscan: {
+    apiKey: {
+      sepolia: process.env.ETHERSCAN_API_KEY! // Add your Etherscan API key
+    }
+  },
+  sourcify: {
+    enabled: true // Enable Sourcify verification
+  },
   typechain: {
     outDir: 'types',
     target: 'ethers-v6'
