@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import ThemeProvider from "@/components/ThemeProvider";
 import Link from "next/link";
 import "./styles/globals.css";
 
@@ -25,31 +24,30 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-black dark:bg-black dark:text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-black`}
       >
-        <ThemeProvider>
-          <nav className="flex items-center justify-between px-6 py-4 bg-gray-100 dark:bg-gray-900 shadow-md">
-            <div className="text-xl font-bold">Envolve</div>
-            <div className="flex gap-6 text-base font-medium">
-              <Link
-                href="/"
-                className="hover:underline hover:underline-offset-4 transition-colors"
-              >
-                Home
-              </Link>
-              <Link
-                href="/about"
-                className="hover:underline hover:underline-offset-4 transition-colors"
-              >
-                About
-              </Link>
-            </div>
-          </nav>
+        <nav className="flex items-center justify-between px-6 py-4 bg-green-200 text-black shadow-md">
 
-          <main className="px-6 py-8">{children}</main>
-        </ThemeProvider>
+          <div className="text-xl font-bold">Envolve</div>
+          <div className="flex gap-6 text-base font-medium">
+            <Link
+              href="/"
+              className="hover:underline hover:underline-offset-4 transition-colors"
+            >
+              Home
+            </Link>
+            <Link
+              href="/about"
+              className="hover:underline hover:underline-offset-4 transition-colors"
+            >
+              About
+            </Link>
+          </div>
+        </nav>
+
+        <main className="px-6 py-8">{children}</main>
       </body>
     </html>
   );

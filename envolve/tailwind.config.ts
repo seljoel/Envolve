@@ -1,13 +1,16 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  darkMode: "class",
   content: [
-    "./app/**/*.{ts,tsx}",     // Include app router pages
-    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{js,ts,jsx,tsx}",
+    "./components/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        envgreen: "#234e2e",
+      },
+    },
   },
   plugins: [],
 };

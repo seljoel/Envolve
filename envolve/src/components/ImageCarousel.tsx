@@ -4,15 +4,9 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 const images = [
-<<<<<<< HEAD
-  "/images/1.jpg",
-  "/images/2.jpg",
-  "/images/3.jpg",
-=======
   "/images/1.png",
   "/images/2.png",
   "/images/3.png",
->>>>>>> 739537bcab480c6039b98bdc1888a1685e27e04d
   // Add more image paths here
 ];
 
