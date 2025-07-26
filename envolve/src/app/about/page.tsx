@@ -1,15 +1,15 @@
 import Link from "next/link";
 
-export default function Home() {
+export default function AboutPage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center gap-6">
-      <h1 className="text-4xl font-bold">Home Page</h1>
+      <h1 className="text-4xl font-bold">About Page</h1>
 
       <Link
-        href="/about"
+        href="/"
         className="text-blue-600 underline hover:text-blue-800"
       >
-        Go to About Page
+        Back to Home
       </Link>
     </main>
   );
