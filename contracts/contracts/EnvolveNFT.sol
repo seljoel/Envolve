@@ -2,30 +2,27 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-/**
- * @title EnvolveNFT
- * @dev A dynamic NFT that evolves based on real-world actions.
- */
-contract EnvolveNFT is ERC721, ERC721URIStorage, Ownable {
+contract EnvolveNFT is ERC721, Ownable {
+    using Strings for uint256;
+    
     // --- State Variables ---
-    uint256 private _currentTokenId = 0;  // Replaces Counter
-    
+    uint256 private _currentTokenId = 0;
     address public actionVerifierAddress;
-    
-    // Evolution thresholds
+
+    // --- Constants ---
     uint256 public constant ACTIONS_FOR_EVOLUTION = 10;
     uint256 public constant ACTIONS_FOR_SPLIT = 25;
 
-    // Metadata URIs
-    string private _baseMetadataURI_Stage0; // Initial state
-    string private _baseMetadataURI_Stage1; // Evolving state
-    string private _baseMetadataURI_Split;  // Post-split base URI
+    // --- Metadata Storage ---
+    mapping(uint256 => string) private _tokenURIs;
+    string private _baseMetadataURI_Stage0;
+    string private _baseMetadataURI_Stage1;
+    string private _baseMetadataURI_Split;
 
-    // NFT Data Structure
+    // --- NFT Data Structure ---
     struct NFTData {
         uint256 actionCount;
         address[4] owners;
@@ -34,7 +31,7 @@ contract EnvolveNFT is ERC721, ERC721URIStorage, Ownable {
     
     mapping(uint256 => NFTData) public nftData;
 
-    // Events
+    // --- Events ---
     event NFTStateChange(uint256 indexed tokenId, uint8 newStage, string newURI);
 
     constructor(
@@ -105,7 +102,26 @@ contract EnvolveNFT is ERC721, ERC721URIStorage, Ownable {
             _setTokenURI(newTokenId, newUri);
         }
 
-        _burn(originalTokenId);
+        // Custom burn handling without overriding
+        _burnInternal(originalTokenId);
+    }
+
+    // --- URI Management ---
+    function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal {
+        require(_ownerOf(tokenId) != address(0), "ERC721URIStorage: URI set of nonexistent token");
+        _tokenURIs[tokenId] = _tokenURI;
+    }
+
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(_ownerOf(tokenId) != address(0), "ERC721: invalid token ID");
+        return _tokenURIs[tokenId];
+    }
+
+    // --- Custom Burn Implementation ---
+    function _burnInternal(uint256 tokenId) internal {
+        super._burn(tokenId);
+        delete _tokenURIs[tokenId];
+        delete nftData[tokenId];
     }
 
     // --- Admin Functions ---
@@ -121,18 +137,5 @@ contract EnvolveNFT is ERC721, ERC721URIStorage, Ownable {
         _baseMetadataURI_Stage0 = stage0;
         _baseMetadataURI_Stage1 = stage1;
         _baseMetadataURI_Split = split;
-    }
-
-    // --- Overrides ---
-    function tokenURI(uint256 tokenId) public view override(ERC721, ERC721URIStorage) returns (string memory) {
-        return super.tokenURI(tokenId);
-    }
-
-    function _burn(uint256 tokenId) internal override(ERC721) {
-        super._burn(tokenId);
-    }
-
-    function supportsInterface(bytes4 interfaceId) public view override(ERC721, ERC721URIStorage) returns (bool) {
-        return super.supportsInterface(interfaceId);
     }
 }
