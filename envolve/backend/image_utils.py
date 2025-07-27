@@ -1,22 +1,30 @@
-import exifread
+from PIL import Image
+from PIL.ExifTags import TAGS, GPSTAGS
 
-def convert_to_degrees(value):
-    def safe_div(x):
-        return float(x.num) / float(x.den) if x.den != 0 else 0.0
+def extract_gps(image_file):
+    image = Image.open(image_file)
+    exif_data = image._getexif()
 
-    d, m, s = [safe_div(x) for x in value.values]
-    return d + (m / 60.0) + (s / 3600.0)
-
-
-def extract_gps(file):
-    tags = exifread.process_file(file)
-    try:
-        lat = convert_to_degrees(tags["GPS GPSLatitude"])
-        lon = convert_to_degrees(tags["GPS GPSLongitude"])
-        if tags["GPS GPSLatitudeRef"].values != "N":
-            lat = -lat
-        if tags["GPS GPSLongitudeRef"].values != "E":
-            lon = -lon
-        return {"lat": lat, "lon": lon}
-    except KeyError:
+    if not exif_data:
         return None
+
+    gps_info = {}
+    for key, val in exif_data.items():
+        if TAGS.get(key) == "GPSInfo":
+            for t in val:
+                gps_info[GPSTAGS.get(t)] = val[t]
+
+    def convert_to_degrees(value):
+        d, m, s = value
+        return float(d) + float(m) / 60 + float(s) / 3600
+
+    if "GPSLatitude" in gps_info and "GPSLongitude" in gps_info:
+        lat = convert_to_degrees(gps_info["GPSLatitude"])
+        if gps_info.get("GPSLatitudeRef") == "S":
+            lat = -lat
+        lon = convert_to_degrees(gps_info["GPSLongitude"])
+        if gps_info.get("GPSLongitudeRef") == "W":
+            lon = -lon
+        return {"lat": lat, "lon": lon}  # <-- use 'lon' instead of 'lng'
+
+    return None
