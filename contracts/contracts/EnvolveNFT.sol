@@ -1,141 +1,129 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract EnvolveNFT is ERC721, Ownable {
+contract EnvolveNFT is ERC721URIStorage, Ownable {
+    using EnumerableSet for EnumerableSet.AddressSet;
     using Strings for uint256;
-    
-    // --- State Variables ---
+
+    // --- State ---
     uint256 private _currentTokenId = 0;
-    address public actionVerifierAddress;
+    uint256 public genesisTokenId;
+    bool public genesisMinted = false;
 
-    // --- Constants ---
-    uint256 public constant ACTIONS_FOR_EVOLUTION = 10;
-    uint256 public constant ACTIONS_FOR_SPLIT = 25;
+    mapping(address => bool) public hasOnboarded;
+    EnumerableSet.AddressSet private onboarders;
 
-    // --- Metadata Storage ---
-    mapping(uint256 => string) private _tokenURIs;
-    string private _baseMetadataURI_Stage0;
-    string private _baseMetadataURI_Stage1;
-    string private _baseMetadataURI_Split;
-
-    // --- NFT Data Structure ---
     struct NFTData {
+        EnumerableSet.AddressSet owners;
         uint256 actionCount;
-        address[4] owners;
-        uint8 evolutionStage; // 0: Genesis, 1: Evolving, 2: Split
+        uint8 stage; // 0: Genesis, 1: Evolved, 2: Final
+        uint256 parentTokenId;
     }
-    
-    mapping(uint256 => NFTData) public nftData;
+
+    mapping(uint256 => NFTData) private _nftData;
+    mapping(address => uint256) public userToTokenId;
 
     // --- Events ---
-    event NFTStateChange(uint256 indexed tokenId, uint8 newStage, string newURI);
+    event Onboarded(address user, uint256 tokenId);
+    event ActionCompleted(address user, uint256 tokenId, uint256 totalActions);
+    event NFTUpgraded(address triggerer, uint256 fromTokenId, uint256 toTokenId, uint8 newStage);
 
-    constructor(
-        string memory initialStage0URI,
-        string memory initialStage1URI,
-        string memory initialSplitURI
-    ) ERC721("Envolve", "ENV") Ownable(msg.sender) {
-        _baseMetadataURI_Stage0 = initialStage0URI;
-        _baseMetadataURI_Stage1 = initialStage1URI;
-        _baseMetadataURI_Split = initialSplitURI;
-    }
+    constructor() ERC721("Envolve", "ENV") Ownable(msg.sender) {}
 
-    // --- Token Management ---
-    function _mintWithAutoId(address to) private returns (uint256) {
-        _currentTokenId++;
-        _safeMint(to, _currentTokenId);
-        return _currentTokenId;
-    }
-
-    function mintGenesis(address[4] memory initialOwners) external {
-        uint256 newTokenId = _mintWithAutoId(address(this));
-        _setTokenURI(newTokenId, _baseMetadataURI_Stage0);
-
-        nftData[newTokenId] = NFTData({
-            actionCount: 0,
-            owners: initialOwners,
-            evolutionStage: 0
-        });
-
-        emit NFTStateChange(newTokenId, 0, _baseMetadataURI_Stage0);
-    }
-
-    // --- Core Logic ---
-    function incrementActionCount(uint256 tokenId) external {
-        require(msg.sender == actionVerifierAddress, "Envolve: Caller is not the verifier");
+    // --- Onboarding ---
+    function onboard() external {
+        require(!hasOnboarded[msg.sender], "Already onboarded");
         
-        NFTData storage data = nftData[tokenId];
-        require(data.evolutionStage < 2, "Envolve: NFT has already been split");
+        onboarders.add(msg.sender);
+        hasOnboarded[msg.sender] = true;
 
+        if (!genesisMinted) {
+            genesisTokenId = _mintWithAutoId(address(this), "ipfs://stage0.json");
+            genesisMinted = true;
+            _nftData[genesisTokenId].stage = 0;
+        }
+
+        _nftData[genesisTokenId].owners.add(msg.sender);
+        userToTokenId[msg.sender] = genesisTokenId;
+
+        emit Onboarded(msg.sender, genesisTokenId);
+    }
+
+    // --- Action Tracking ---
+    function completeAction() external {
+        uint256 tokenId = userToTokenId[msg.sender];
+        require(tokenId != 0, "Not onboarded");
+
+        NFTData storage data = _nftData[tokenId];
         data.actionCount++;
 
-        if (data.actionCount == ACTIONS_FOR_EVOLUTION) {
-            data.evolutionStage = 1;
-            _setTokenURI(tokenId, _baseMetadataURI_Stage1);
-            emit NFTStateChange(tokenId, 1, _baseMetadataURI_Stage1);
+        emit ActionCompleted(msg.sender, tokenId, data.actionCount);
+
+        if (data.actionCount == 10 && data.stage == 0) {
+            _upgradeToStage1(msg.sender, tokenId);
+        } 
+        else if (data.actionCount == 25 && data.stage == 1) {
+            _upgradeToStage2(msg.sender, tokenId);
         }
-
-        if (data.actionCount >= ACTIONS_FOR_SPLIT) {
-            _splitNFT(tokenId);
-        }
     }
 
-    function _splitNFT(uint256 originalTokenId) internal {
-        NFTData storage data = nftData[originalTokenId];
-        require(data.actionCount >= ACTIONS_FOR_SPLIT, "Envolve: Not enough actions to split");
+    // --- Evolution Logic ---
+    function _upgradeToStage1(address user, uint256 oldTokenId) private {
+        uint256 newTokenId = _mintWithAutoId(address(this), "ipfs://stage1.json");
+        
+        // Migrate only this user
+        _nftData[newTokenId].owners.add(user);
+        _nftData[newTokenId].stage = 1;
+        _nftData[newTokenId].parentTokenId = oldTokenId;
+        userToTokenId[user] = newTokenId;
 
-        data.evolutionStage = 2;
+        // Remove from old NFT (others remain)
+        _nftData[oldTokenId].owners.remove(user);
 
-        // Mint 4 new NFTs
-        for (uint8 i = 0; i < 4; i++) {
-            uint256 newTokenId = _mintWithAutoId(data.owners[i]);
-            string memory newUri = string(abi.encodePacked(
-                _baseMetadataURI_Split, 
-                "/", 
-                Strings.toString(i + 1), 
-                ".json"
-            ));
-            _setTokenURI(newTokenId, newUri);
-        }
-
-        // Custom burn handling without overriding
-        _burnInternal(originalTokenId);
+        emit NFTUpgraded(user, oldTokenId, newTokenId, 1);
     }
 
-    // --- URI Management ---
-    function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal {
-        require(_ownerOf(tokenId) != address(0), "ERC721URIStorage: URI set of nonexistent token");
-        _tokenURIs[tokenId] = _tokenURI;
+    function _upgradeToStage2(address user, uint256 oldTokenId) private {
+        uint256 newTokenId = _mintWithAutoId(
+            user, 
+            string(abi.encodePacked("ipfs://stage2_", userToTokenId[user], ".json"))
+        );
+        
+        // Unique NFT for this user
+        _nftData[newTokenId].stage = 2;
+        _nftData[newTokenId].owners.add(user);
+        _nftData[newTokenId].parentTokenId = oldTokenId;
+        userToTokenId[user] = newTokenId;
+
+        // Remove from old NFT
+        _nftData[oldTokenId].owners.remove(user);
+
+        emit NFTUpgraded(user, oldTokenId, newTokenId, 2);
     }
 
-    function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        require(_ownerOf(tokenId) != address(0), "ERC721: invalid token ID");
-        return _tokenURIs[tokenId];
+    // --- Shared Ownership Management ---
+    function joinEvolvedNFT(uint256 tokenId) external {
+        require(_nftData[tokenId].stage == 1, "Not an Evolved NFT");
+        require(_nftData[tokenId].owners.contains(msg.sender) == false, "Already member");
+        
+        // Verify user has completed 10 actions on their current NFT
+        uint256 currentTokenId = userToTokenId[msg.sender];
+        require(_nftData[currentTokenId].actionCount >= 10, "Complete 10 actions first");
+
+        _nftData[tokenId].owners.add(msg.sender);
+        userToTokenId[msg.sender] = tokenId;
     }
 
-    // --- Custom Burn Implementation ---
-    function _burnInternal(uint256 tokenId) internal {
-        super._burn(tokenId);
-        delete _tokenURIs[tokenId];
-        delete nftData[tokenId];
-    }
-
-    // --- Admin Functions ---
-    function setActionVerifierAddress(address _verifierAddress) external onlyOwner {
-        actionVerifierAddress = _verifierAddress;
-    }
-
-    function setBaseURIs(
-        string memory stage0, 
-        string memory stage1, 
-        string memory split
-    ) external onlyOwner {
-        _baseMetadataURI_Stage0 = stage0;
-        _baseMetadataURI_Stage1 = stage1;
-        _baseMetadataURI_Split = split;
+    // --- Helpers ---
+    function _mintWithAutoId(address to, string memory uri) private returns (uint256) {
+        _currentTokenId++;
+        _mint(to, _currentTokenId);
+        _setTokenURI(_currentTokenId, uri);
+        return _currentTokenId;
     }
 }

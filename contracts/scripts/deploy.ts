@@ -1,34 +1,71 @@
-import { ethers, network } from "hardhat";
+import { ethers, network, run } from "hardhat";
 
 async function main() {
-  // Log network info
-  console.log("Using network:", network.name);
-  
-  // Get signers
-  const [owner1, owner2, owner3, owner4] = await ethers.getSigners();
-  console.log("Deployer address:", owner1.address);
+  // ========== CONFIGURATION ==========
+  const DEPLOYER_INDEX = 0; // First account from getSigners()
+  const CONFIRMATIONS = 2; // Blocks to wait for confirmation
 
-  // Deploy contract
+  // ========== DEPLOYMENT ==========
+  console.log(`\nDeploying to ${network.name}...`);
+
+  const [deployer] = await ethers.getSigners();
+  console.log(`Using deployer: ${deployer.address}`);
+  console.log(`Balance: ${ethers.formatEther(await deployer.provider.getBalance(deployer.address))} ETH`);
+
+  console.log("\n1. Deploying EnvolveNFT contract...");
   const EnvolveNFT = await ethers.getContractFactory("EnvolveNFT");
-  console.log("Deploying EnvolveNFT...");
+  const nft = await EnvolveNFT.deploy();
   
-  const nft = await EnvolveNFT.deploy(
-    "ipfs://QmYvxEW9ucfwdfMoegq2xeBZRgLgFEBUFmKGoDM5goAEzk/stage0.json", // Replace with actual IPFS URIs
-    "ipfs://QmanKKUpaA7ouDW4UvdpV56s1zQhdBPJYWY5deg7rfF9mU/stage1.json",
-    "ipfs://QmfF5WpuHjkEPqXSRijCv5A84UMLVX4Uz9thPTyoZt3oU8/stage2.json"
-  );
+  const deploymentTx = nft.deploymentTransaction();
+  console.log(`\nTransaction hash: ${deploymentTx?.hash}`);
+  console.log(`Waiting for ${CONFIRMATIONS} confirmations...`);
+  
+  // Correct way to wait for confirmations
+  if (deploymentTx) {
+    await deploymentTx.wait(CONFIRMATIONS);
+  }
+  
+  const contractAddress = await nft.getAddress();
+  console.log(`\n✅ EnvolveNFT deployed to: ${contractAddress}`);
+  console.log(`🔗 Explorer: ${getExplorerLink(network.name, contractAddress)}`);
 
-  // Wait for deployment confirmation
-  await nft.waitForDeployment();
-  
-  // Get the contract address
-  console.log(`Deployed to: ${await nft.getAddress()}`);
-  console.log(`Explorer: https://sepolia.etherscan.io/address/${await nft.getAddress()}`);
+  // ========== VERIFICATION ==========
+  console.log("\n2. Verifying contract...");
+  try {
+    // Wait 30 seconds for Etherscan to index
+    await new Promise(resolve => setTimeout(resolve, 30000));
+    
+    await run("verify:verify", {
+      address: contractAddress,
+      constructorArguments: [],
+    });
+    console.log("✅ Contract verified");
+  } catch (error) {
+    console.error("Verification failed:", error instanceof Error ? error.message : error);
+  }
+
+  // ========== POST-DEPLOYMENT ==========
+  console.log("\n3. Deployment completed!");
+  console.log("\nNext steps:");
+  console.log(`- Set up frontend to interact with: ${contractAddress}`);
+  console.log(`- Initialize contract with initial settings`);
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
+// Helper function to get explorer link
+function getExplorerLink(networkName: string, address: string): string {
+  const explorers: Record<string, string> = {
+    mainnet: "https://etherscan.io",
+    sepolia: "https://sepolia.etherscan.io",
+    goerli: "https://goerli.etherscan.io",
+    polygon: "https://polygonscan.com",
+    mumbai: "https://mumbai.polygonscan.com",
+    arbitrum: "https://arbiscan.io",
+    optimism: "https://optimistic.etherscan.io"
+  };
+  return `${explorers[networkName] || "https://etherscan.io"}/address/${address}`;
+}
+
 main().catch((error) => {
-  console.error(error);
+  console.error("\n❌ Deployment failed:", error instanceof Error ? error.message : error);
   process.exitCode = 1;
 });
