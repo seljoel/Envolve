@@ -2,11 +2,14 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
+import { useWeb3 } from "../../contexts/Web3Provider"; // ✅ Correct import
 
 export default function Navbar() {
   const [showPopup, setShowPopup] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
+
+  const { connectWallet, disconnectWallet, address } = useWeb3(); // ✅ Use hook
 
   // Close popup on outside click
   useEffect(() => {
@@ -42,9 +45,21 @@ export default function Navbar() {
         </Link>
 
         <div className="relative">
-          <button className="ml-6 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors">
-              Connect
+          {address ? (
+            <button
+              onClick={disconnectWallet}
+              className="bg-red-500 px-4 py-2 text-white rounded hover:bg-red-600 transition-colors"
+            >
+              Disconnect
             </button>
+          ) : (
+            <button
+              onClick={connectWallet}
+              className="bg-green-600 px-4 py-2 text-white rounded hover:bg-green-700 transition-colors"
+            >
+              Connect Wallet
+            </button>
+          )}
         </div>
       </div>
     </nav>
