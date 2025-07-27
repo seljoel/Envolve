@@ -28,7 +28,7 @@ export default function Navbar() {
 
   return (
     <nav className="relative flex items-center justify-between px-6 py-4 bg-green-200 text-black shadow-md z-50">
-      <div className="text-xl font-bold">Envolve</div>
+      <div className="text-3xl font-bold">Envolve</div>
 
       <div className="flex items-center gap-6 text-base font-medium">
         <Link
@@ -36,6 +36,12 @@ export default function Navbar() {
           className="hover:underline hover:underline-offset-4 transition-colors"
         >
           Home
+        </Link>
+        <Link
+          href="/upload"
+          className="hover:underline hover:underline-offset-4 transition-colors"
+        >
+          Upload
         </Link>
         <Link
           href="/about"

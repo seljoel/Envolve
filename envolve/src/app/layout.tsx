@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./styles/globals.css";
 import { Web3Provider } from "../../contexts/Web3Provider";
 import Navbar from "@/components/Navbar"; // ✅ Import the navbar
+import "leaflet/dist/leaflet.css";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
