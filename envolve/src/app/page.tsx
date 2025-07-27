@@ -53,16 +53,6 @@ export default function Home() {
           </div>
         ))}
       </div>
-
-      {/* Navigation Link */}
-      <div className="mt-10 text-center z-10 relative">
-        <Link
-          href="/about"
-          className="text-blue-600 underline hover:text-blue-800"
-        >
-          Go to About Page
-        </Link>
-      </div>
     </main>
   );
 }
